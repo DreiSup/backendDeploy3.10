@@ -39,7 +39,7 @@ let phoneList = [
 
 
 app.get('/', (request, response) => {
-    response.send('<h1>No way bro</h1>')
+    response.send('<h1>To access the api, /api/persons</h1>')
 })
 
 
@@ -112,7 +112,7 @@ app.delete('/api/persons/:id', (request, response) => {
     phoneList = phoneList.filter(person => person.id !== id)
 
     console.log(`${id} has been removed`)
-    response.status(204).end()
+    response.status(204).json(`${id} has been removed`).end()
 })
 
 
