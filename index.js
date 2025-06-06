@@ -112,7 +112,7 @@ app.delete('/api/persons/:id', (request, response) => {
     phoneList = phoneList.filter(person => person.id !== id)
 
     console.log(`${id} has been removed`)
-    response.status(204).json(`${id} has been removed`).end()
+    response.status(200).json({message:`${id} has been removed`}).end()
 })
 
 
