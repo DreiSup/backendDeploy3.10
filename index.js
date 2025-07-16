@@ -1,7 +1,11 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
-const app = express()
 const cors = require('cors')
+
+const Person = require('./person')
+
+const app = express()
 
 app.use(express.json())
 app.use(cors())
@@ -16,7 +20,7 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
 
 const date = new Date();
 
-let phoneList = [
+/* let phoneList = [
     { 
       id: "1",
       name: "Arto Hellas", 
@@ -37,7 +41,7 @@ let phoneList = [
       name: "Mary Poppendieck", 
       number: "39-23-6423122"
     }
-]
+] */
 
 
 app.get('/', (request, response) => {
@@ -46,6 +50,9 @@ app.get('/', (request, response) => {
 
 
 app.get('/info', (request, response) => {
+
+    const listLength = 
+
     response.send(
         `<p>Phonebook has info for ${phoneList.length} people</p>
          <p>${date}</p>
@@ -55,13 +62,15 @@ app.get('/info', (request, response) => {
 
 
 app.get('/api/persons', (request,response) => {
-    response.json(phoneList)
+    Person.find({}).then(person => {
+        response.json(person)
+    })
 })
 
 app.get('/api/persons/:id', (request,response) => {
     console.log(request.params.id)
 
-    const id = request.params.id
+    /* const id = request.params.id
     const person = phoneList.find(person => person.id === id )
 
     if (!person) {
@@ -70,37 +79,46 @@ app.get('/api/persons/:id', (request,response) => {
         })
     }
 
-    response.json(person)
+    response.json(person) */
 
 })
 
 app.post('/api/persons', (request, response) => {
     try{
 
-        const person = request.body
-        console.log(request.body)
+        const body = request.body
+        console.log('Body: ', body)
         
         
-        const randomId = Math.floor(Math.random() * 100)
+        /* const randomId = Math.floor(Math.random() * 100)
         
         const findName = () =>{
            return phoneList.find(p => p.name === person.name)
-        } 
+        }  */
         
 
-        if (!person.name || !person.number) {
+       /*  if (!person.name || !person.number) {
             response.status(400).json({error: 'Content is missing'})
             return
-        } 
-        if (findName()) {
+        }  */
+        /* if (findName()) {
             response.status(400).json({error: 'Name already exists'})
             return
-        }
+        } */
+
+        const person = new Person({
+            name: body.name,
+            number: body.number
+        })
+
+        person.save().then(savedPerson => {
+            response.json(savedPerson, 'hello mf')
+        })
 
 
-        person.id = String(randomId)
+        /* person.id = String(randomId)
         phoneList = phoneList.concat(person)
-        response.json(person)
+        response.json(person) */
 
     }
     catch (error) {
