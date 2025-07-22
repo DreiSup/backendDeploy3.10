@@ -20,7 +20,7 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
 
 const date = new Date();
 
-/* let phoneList = [
+ let phoneList = [
     { 
       id: "1",
       name: "Arto Hellas", 
@@ -41,7 +41,7 @@ const date = new Date();
       name: "Mary Poppendieck", 
       number: "39-23-6423122"
     }
-] */
+] 
 
 
 app.get('/', (request, response) => {
@@ -49,9 +49,7 @@ app.get('/', (request, response) => {
 })
 
 
-app.get('/info', (request, response) => {
-
-    const listLength = 
+app.get('/info', (request, response, next) => {
 
     response.send(
         `<p>Phonebook has info for ${phoneList.length} people</p>
@@ -61,50 +59,35 @@ app.get('/info', (request, response) => {
 })
 
 
-app.get('/api/persons', (request,response) => {
-    Person.find({}).then(person => {
-        response.json(person)
-    })
+app.get('/api/persons', (request, response, next) => {
+    Person.find({})
+        .then(person => {
+            response.json(person)
+        })
+        .catch (error => next(error))
 })
 
-app.get('/api/persons/:id', (request,response) => {
+app.get('/api/persons/:id', (request, response, next) => {
     console.log(request.params.id)
 
-    /* const id = request.params.id
-    const person = phoneList.find(person => person.id === id )
-
-    if (!person) {
-        return response.status(400).json({
-            error: 'content missing'
+    Person.findById(request.params.id)
+        .then(person => {
+            if (person) {
+                response.json(person)
+            }
+            else {
+                response.status(404).end()
+            }
         })
-    }
-
-    response.json(person) */
-
+        .catch (error => next(error))
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     try{
 
         const body = request.body
         console.log('Body: ', body)
-        
-        
-        /* const randomId = Math.floor(Math.random() * 100)
-        
-        const findName = () =>{
-           return phoneList.find(p => p.name === person.name)
-        }  */
-        
 
-       /*  if (!person.name || !person.number) {
-            response.status(400).json({error: 'Content is missing'})
-            return
-        }  */
-        /* if (findName()) {
-            response.status(400).json({error: 'Name already exists'})
-            return
-        } */
 
         const person = new Person({
             name: body.name,
@@ -115,25 +98,55 @@ app.post('/api/persons', (request, response) => {
             response.json(savedPerson, 'hello mf')
         })
 
-
-        /* person.id = String(randomId)
-        phoneList = phoneList.concat(person)
-        response.json(person) */
-
     }
     catch (error) {
-        response.status(400).json({error: error.message})
+        next(error)
     }
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.put('/api/persons/:id', (request, response, next) => {
+    const {name, number} = request.body
 
-    const id = request.params.id
-    phoneList = phoneList.filter(person => person.id !== id)
+    console.log(request.body)
 
-    console.log(`${id} has been removed`)
-    response.status(200).json({message:`${id} has been removed`}).end()
+    Person.findById(request.params.id)
+        .then(person => {
+            if(!person) {
+                return response.status(404).end()
+            }
+
+        person.name = name
+        person.number = number
+
+        return person.save().then((updatedPerson) => {
+            response.json(updatedPerson)
+        })
+    })
+    .catch(error => next(error))
 })
+
+app.delete('/api/persons/:id', (request, response, next) => {
+
+    Person.findByIdAndDelete(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
+})
+
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
+
+  next(error)
+}
+
+// this has to be the last loaded middleware, also all the routes should be registered before this!
+app.use(errorHandler)
 
 
 
